@@ -1,7 +1,7 @@
 name: transition
 version: 0.1
 category: Control
-synopsis: State-monad with optional updates
+synopsis: Like state-monad but with optional updates
 homepage: https://github.com/nikita-volkov/transition
 bug-reports: https://github.com/nikita-volkov/transition/issues
 author: Nikita Volkov <nikita.y.volkov@mail.ru>
