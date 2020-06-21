@@ -16,7 +16,17 @@ the state value has been updated.
 This comes in especially handy when applying it to the content of 'TVar',
 since it lets us avoid redundant writes and hence reduces the contention.
 -}
-newtype Transition s a = Transition (s -> TransitionResult s a)
+newtype Transition s a =
+  {-|
+  You can think of it as the following function:
+
+  @s -> (a, Maybe s)@
+
+  The 'TransitionResult' type just lets us represent the same thing more efficiently,
+  and lets us control the strictness to avoid space leaks,
+  which is a problem of the 'State' monad.
+  -}
+  Transition (s -> TransitionResult s a)
 
 data TransitionResult s a = UnchangedTransitionResult ~a | ChangedTransitionResult ~a !s
 
