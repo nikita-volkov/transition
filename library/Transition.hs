@@ -5,6 +5,7 @@ module Transition
   liftState,
   transitionTVar,
   focusOnValueOfMap,
+  focusOnExistingValueOfMap,
 )
 where
 
@@ -81,3 +82,20 @@ focusOnValueOfMap k (Transition valueTransitionFn) =
           (ChangedTransitionResult a, newMaybeValue)
         UnchangedTransitionResult a ->
           (const (UnchangedTransitionResult a), maybeVal)
+
+focusOnExistingValueOfMap :: Ord k => k -> Transition v a -> Transition (Map.Map k v) (Maybe a)
+focusOnExistingValueOfMap k (Transition valueTransitionFn) =
+  Transition $ \ map ->
+    case Map.alterF alterFn k map of
+      (newMapFn, newMap) -> newMapFn newMap
+  where
+    alterFn =
+      \ case
+        Just v ->
+          case valueTransitionFn v of
+            ChangedTransitionResult a newValue ->
+              (ChangedTransitionResult (Just a), Just newValue)
+            UnchangedTransitionResult a ->
+              (const (UnchangedTransitionResult (Just a)), Just v)
+        Nothing ->
+          (const (UnchangedTransitionResult Nothing), Nothing)
