@@ -73,14 +73,11 @@ transitionMapValue :: Ord k => k -> Transition (Maybe v) a -> Transition (Map.Ma
 transitionMapValue k (Transition valueTransitionFn) =
   Transition $ \ map ->
     case Map.alterF alterFn k map of
-      ((a, changed), newMap) ->
-        if changed
-          then ChangedTransitionResult a newMap
-          else UnchangedTransitionResult a
-    where
-      alterFn maybeVal =
-        case valueTransitionFn maybeVal of
-          ChangedTransitionResult a newMaybeValue ->
-            ((a, True), newMaybeValue)
-          UnchangedTransitionResult a ->
-            ((a, False), maybeVal)
+      (newMapFn, newMap) -> newMapFn newMap
+  where
+    alterFn maybeVal =
+      case valueTransitionFn maybeVal of
+        ChangedTransitionResult a newMaybeValue ->
+          (ChangedTransitionResult a, newMaybeValue)
+        UnchangedTransitionResult a ->
+          (const (UnchangedTransitionResult a), maybeVal)
