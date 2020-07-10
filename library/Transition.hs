@@ -4,7 +4,7 @@ module Transition
   TransitionResult(..),
   liftState,
   transitionTVar,
-  transitionMapValue,
+  focusOnValueOfMap,
 )
 where
 
@@ -69,8 +69,8 @@ transitionTVar tv (Transition update) = do
     ChangedTransitionResult a newS -> writeTVar tv newS $> a
     UnchangedTransitionResult a -> return a
 
-transitionMapValue :: Ord k => k -> Transition (Maybe v) a -> Transition (Map.Map k v) a
-transitionMapValue k (Transition valueTransitionFn) =
+focusOnValueOfMap :: Ord k => k -> Transition (Maybe v) a -> Transition (Map.Map k v) a
+focusOnValueOfMap k (Transition valueTransitionFn) =
   Transition $ \ map ->
     case Map.alterF alterFn k map of
       (newMapFn, newMap) -> newMapFn newMap
