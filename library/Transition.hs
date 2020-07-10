@@ -4,10 +4,12 @@ module Transition
   TransitionResult(..),
   liftState,
   transitionTVar,
+  transitionMapValue,
 )
 where
 
 import Transition.Prelude
+import qualified Data.Map.Strict as Map
 
 
 {-|
@@ -66,3 +68,19 @@ transitionTVar tv (Transition update) = do
   case update s of
     ChangedTransitionResult a newS -> writeTVar tv newS $> a
     UnchangedTransitionResult a -> return a
+
+transitionMapValue :: Ord k => k -> Transition (Maybe v) a -> Transition (Map.Map k v) a
+transitionMapValue k (Transition valueTransitionFn) =
+  Transition $ \ map ->
+    case Map.alterF alterFn k map of
+      ((a, changed), newMap) ->
+        if changed
+          then ChangedTransitionResult a newMap
+          else UnchangedTransitionResult a
+    where
+      alterFn maybeVal =
+        case valueTransitionFn maybeVal of
+          ChangedTransitionResult a newMaybeValue ->
+            ((a, True), newMaybeValue)
+          UnchangedTransitionResult a ->
+            ((a, False), maybeVal)
