@@ -2,8 +2,8 @@ module Transition
 (
   Transition(..),
   TransitionResult(..),
-  transitionTVar,
   liftState,
+  transitionTVar,
 )
 where
 
@@ -49,6 +49,15 @@ instance Monad (Transition s) where
       UnchangedTransitionResult la -> case rk la of Transition rf -> rf s
 
 {-|
+Lift a 'State' computation by checking whether its underlying value changes using 'Eq'.
+-}
+liftState :: Eq s => State s a -> Transition s a
+liftState m = Transition $ \ s -> case runState m s of
+  (a, newS) -> if newS == s
+    then UnchangedTransitionResult a
+    else ChangedTransitionResult a newS
+
+{-|
 Access the contents of tvar and optionally modify them.
 -}
 transitionTVar :: TVar s -> Transition s a -> STM a
@@ -57,12 +66,3 @@ transitionTVar tv (Transition update) = do
   case update s of
     ChangedTransitionResult a newS -> writeTVar tv newS $> a
     UnchangedTransitionResult a -> return a
-
-{-|
-Lift a 'State' computation by checking whether its underlying value changes using 'Eq'.
--}
-liftState :: Eq s => State s a -> Transition s a
-liftState m = Transition $ \ s -> case runState m s of
-  (a, newS) -> if newS == s
-    then UnchangedTransitionResult a
-    else ChangedTransitionResult a newS
