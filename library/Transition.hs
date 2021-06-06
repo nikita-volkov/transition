@@ -31,10 +31,6 @@ newtype Transition s a =
   -}
   Transition (s -> TransitionResult s a)
 
-data TransitionResult s a = UnchangedTransitionResult ~a | ChangedTransitionResult ~a !s
-
-deriving instance Functor (TransitionResult s)
-
 deriving instance Functor (Transition s)
 
 instance Applicative (Transition s) where
@@ -60,6 +56,10 @@ instance MonadState s (Transition s) where
   get = Transition UnchangedTransitionResult
   put s = Transition (\_ -> ChangedTransitionResult () s)
   state f = Transition (\s -> case f s of (a, newS) -> ChangedTransitionResult a newS)
+
+data TransitionResult s a = UnchangedTransitionResult ~a | ChangedTransitionResult ~a !s
+
+deriving instance Functor (TransitionResult s)
 
 {-|
 Lift a 'State' computation by checking whether its underlying value changes using 'Eq'.
