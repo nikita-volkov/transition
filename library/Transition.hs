@@ -4,8 +4,8 @@ module Transition
   TransitionResult(..),
   liftState,
   transitionTVar,
-  focusOnValueOfMap,
-  focusOnExistingValueOfMap,
+  onValueOfMap,
+  onExistingValueOfMap,
 )
 where
 
@@ -80,8 +80,8 @@ transitionTVar tv (Transition update) = do
     ChangedTransitionResult a newS -> writeTVar tv newS $> a
     UnchangedTransitionResult a -> return a
 
-focusOnValueOfMap :: Ord k => k -> Transition (Maybe v) a -> Transition (Map.Map k v) a
-focusOnValueOfMap k (Transition valueTransitionFn) =
+onValueOfMap :: Ord k => k -> Transition (Maybe v) a -> Transition (Map.Map k v) a
+onValueOfMap k (Transition valueTransitionFn) =
   Transition $ \ map ->
     case Map.alterF alterFn k map of
       (newMapFn, newMap) -> newMapFn newMap
@@ -93,8 +93,8 @@ focusOnValueOfMap k (Transition valueTransitionFn) =
         UnchangedTransitionResult a ->
           (const (UnchangedTransitionResult a), maybeVal)
 
-focusOnExistingValueOfMap :: Ord k => k -> Transition v a -> Transition (Map.Map k v) (Maybe a)
-focusOnExistingValueOfMap k (Transition valueTransitionFn) =
+onExistingValueOfMap :: Ord k => k -> Transition v a -> Transition (Map.Map k v) (Maybe a)
+onExistingValueOfMap k (Transition valueTransitionFn) =
   Transition $ \ map ->
     case Map.alterF alterFn k map of
       (newMapFn, newMap) -> newMapFn newMap
