@@ -56,6 +56,11 @@ instance Monad (Transition s) where
           rr -> rr
       UnchangedTransitionResult la -> case rk la of Transition rf -> rf s
 
+instance MonadState s (Transition s) where
+  get = Transition UnchangedTransitionResult
+  put s = Transition (\_ -> ChangedTransitionResult () s)
+  state f = Transition (\s -> case f s of (a, newS) -> ChangedTransitionResult a newS)
+
 {-|
 Lift a 'State' computation by checking whether its underlying value changes using 'Eq'.
 -}
