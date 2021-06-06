@@ -41,14 +41,19 @@ instance Applicative (Transition s) where
   pure a = Transition (const (UnchangedTransitionResult a))
   (<*>) (Transition lf) (Transition rf) = Transition $ \ s ->
     case lf s of
-      ChangedTransitionResult la newS -> fmap la (rf newS)
+      ChangedTransitionResult la ls -> case rf ls of
+        UnchangedTransitionResult ra -> ChangedTransitionResult (la ra) ls
+        ChangedTransitionResult ra rs -> ChangedTransitionResult (la ra) rs
       UnchangedTransitionResult la -> fmap la (rf s)
 
 instance Monad (Transition s) where
   return = pure
   (>>=) (Transition lf) rk = Transition $ \ s ->
     case lf s of
-      ChangedTransitionResult la newS -> case rk la of Transition rf -> rf newS
+      ChangedTransitionResult la newS -> case rk la of
+        Transition rf -> case rf newS of
+          UnchangedTransitionResult ra -> ChangedTransitionResult ra newS
+          rr -> rr
       UnchangedTransitionResult la -> case rk la of Transition rf -> rf s
 
 {-|
